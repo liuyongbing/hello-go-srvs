@@ -9,6 +9,7 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 
 	"github.com/liuyongbing/hello-go-srvs/user_srv/model"
 )
@@ -33,6 +34,9 @@ func main() {
 	// 参考 https://github.com/go-sql-driver/mysql#dsn-data-source-name 获取详情
 	dsn := "root:mysql.root@tcp(127.0.0.1:3306)/hello_gosrvs?charset=utf8mb4&parseTime=True&loc=Local"
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		NamingStrategy: schema.NamingStrategy{
+			SingularTable: true,
+		},
 		Logger: newLogger,
 	})
 	if err != nil {
