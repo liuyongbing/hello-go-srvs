@@ -1,10 +1,14 @@
 package main
 
 import (
-	"database/sql"
+	"io"
 	"log"
 	"os"
 	"time"
+
+	"crypto/md5"
+	"database/sql"
+	"encoding/hex"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -18,6 +22,12 @@ type Product struct {
 	gorm.Model
 	Code  sql.NullString
 	Price uint
+}
+
+func genMd5(code string) string {
+	Md5 := md5.New()
+	_, _ = io.WriteString(Md5, code)
+	return hex.EncodeToString(Md5.Sum(nil))
 }
 
 func main() {
