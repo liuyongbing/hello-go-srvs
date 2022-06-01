@@ -4,6 +4,10 @@ import (
 	"context"
 	"crypto/sha512"
 	"fmt"
+	"strings"
+	"time"
+
+	"github.com/golang/protobuf/ptypes/empty"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -17,11 +21,10 @@ import (
 )
 
 //type UserServer interface {
-//	UpdateUser(context.Context, *UpdateUserInfo) (*emptypb.Empty, error)
-//	CheckPassword(context.Context, *PasswordCheckInfo) (*CheckResponse, error)
 //	mustEmbedUnimplementedUserServer()
 //}
 type UserServer struct {
+	//mustEmbedUnimplementedUserServer()
 }
 
 /*
@@ -160,4 +163,41 @@ func (s *UserServer) CreateUser(ctx context.Context, req *proto.CreateUserInfo) 
 	userInfoRsp := ModelToResponse(user)
 
 	return &userInfoRsp, nil
+}
+
+/*
+UpdateUser
+修改用户信息
+*/
+func (s *UserServer) UpdateUser(ctx context.Context, req *proto.UpdateUserInfo) (*empty.Empty, error) {
+	var user model.User
+	result := global.DB.First(user, req.Id)
+	if result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "用户不存在")
+	}
+
+	birthDay := time.Unix(int64(req.BirthDay), 0)
+	user.Nickname = req.NickName
+	user.Birthday = &birthDay
+	user.Gender = req.Gender
+
+	result = global.DB.Save(user)
+	if result.Error != nil {
+		return nil, status.Errorf(codes.Internal, result.Error.Error())
+	}
+
+	return &empty.Empty{}, nil
+}
+
+/*
+CheckPassword
+检查用户密码
+*/
+func (s *UserServer) CheckPassword(ctx context.Context, req *proto.PasswordCheckInfo) (*proto.CheckResponse, error) {
+	//密码校验
+	options := &password.Options{SaltLen: 16, Iterations: 100, KeyLen: 32, HashFunction: sha512.New}
+	passwordInfo := strings.Split(req.EncryptedPassword, "$")
+	check := password.Verify(req.PassWord, passwordInfo[2], passwordInfo[3], options)
+
+	return &proto.CheckResponse{Success: check}, nil
 }
