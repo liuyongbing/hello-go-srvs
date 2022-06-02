@@ -20,11 +20,8 @@ import (
 	"github.com/liuyongbing/hello-go-srvs/user_srv/proto"
 )
 
-//type UserServer interface {
-//	mustEmbedUnimplementedUserServer()
-//}
 type UserServer struct {
-	//mustEmbedUnimplementedUserServer()
+	proto.UnimplementedUserServer
 }
 
 /*

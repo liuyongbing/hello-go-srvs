@@ -1,10 +1,14 @@
 package main
 
 import (
+	"crypto/sha512"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"time"
+
+	"github.com/anaskhan96/go-password-encoder"
 
 	"crypto/md5"
 	"database/sql"
@@ -30,6 +34,33 @@ func genMd5(code string) string {
 	return hex.EncodeToString(Md5.Sum(nil))
 }
 
+/*
+initTable:创建表 user
+*/
+func initTable(db *gorm.DB, user *model.User) {
+	db.AutoMigrate(&user)
+}
+
+func batchCreateUser(db *gorm.DB) error {
+	// Using custom options
+	options := &password.Options{SaltLen: 16, Iterations: 100, KeyLen: 32, HashFunction: sha512.New}
+	salt, encodedPwd := password.Encode("generic password", options)
+	newPassword := fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
+	fmt.Println(len(newPassword))
+	fmt.Println(newPassword)
+
+	for i := 0; i < 10; i++ {
+		user := model.User{
+			Nickname: fmt.Sprintf("Nickname_%d", i),
+			Mobile:   fmt.Sprintf("1881234567%d", i),
+			Password: newPassword,
+		}
+		db.Save(&user)
+	}
+
+	return nil
+}
+
 func main() {
 	// @link https://gorm.io/docs/logger.html
 	newLogger := logger.New(
@@ -53,8 +84,12 @@ func main() {
 		panic(err)
 	}
 
-	err = db.AutoMigrate(&model.User{})
+	// 初始化数据表
+	//err = db.AutoMigrate(&model.User{})
+	// 初始化用户数据
+	err = batchCreateUser(db)
 	if err != nil {
 		panic(err)
 	}
+
 }
