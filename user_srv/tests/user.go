@@ -25,12 +25,7 @@ func Init() {
 	userClient = proto.NewUserClient(conn)
 }
 
-//GetUserList(ctx context.Context, in *PageInfo, opts ...grpc.CallOption) (*UserListResponse, error)
-//GetUserByMobile(ctx context.Context, in *MobileRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
-//GetUserById(ctx context.Context, in *IdRequest, opts ...grpc.CallOption) (*UserInfoResponse, error)
-//CreateUser(ctx context.Context, in *CreateUserInfo, opts ...grpc.CallOption) (*UserInfoResponse, error)
 //UpdateUser(ctx context.Context, in *UpdateUserInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
-//CheckPassword(ctx context.Context, in *PasswordCheckInfo, opts ...grpc.CallOption) (*CheckResponse, error)
 
 /*
 TestGetUserList
@@ -77,14 +72,52 @@ func TestCreateUser() {
 	}
 }
 
+/*
+TestGetUserByMobile
+测试: 通过手机获取用户
+*/
+func TestGetUserByMobile() {
+	for i := 0; i < 10; i++ {
+		rsp, err := userClient.GetUserByMobile(context.Background(), &proto.MobileRequest{
+			Mobile: fmt.Sprintf("1881234567%d", i),
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("User Mobil: ", rsp.Mobile)
+	}
+}
+
+/*
+TestGetUserById
+测试: 通过User Id获取用户
+*/
+func TestGetUserById() {
+	for i := 1; i <= 10; i++ {
+		rsp, err := userClient.GetUserById(context.Background(), &proto.IdRequest{
+			Id: int32(i),
+		})
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println("User ID: ", rsp.Id)
+	}
+}
+
 func main() {
 	Init()
 
 	// 测试：创建用户
-	TestCreateUser()
+	//TestCreateUser()
 
 	// 测试：获取用户列表
 	TestGetUserList()
+
+	// 测试: 通过手机获取用户
+	TestGetUserByMobile()
+
+	//测试: 通过User Id获取用户
+	TestGetUserById()
 
 	conn.Close()
 }
