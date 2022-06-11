@@ -1,6 +1,12 @@
+name: "user-srv"
+
 mysql:
   host: "127.0.0.1"
   port: 3306
   user: "root"
-  passwrod: "mysql.root"
+  password: "mysql.root"
   db: "hello_gosrvs"
+
+consul:
+  host: "127.0.0.1"
+  port: 3306
