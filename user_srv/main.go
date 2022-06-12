@@ -22,12 +22,14 @@ func main() {
 	initialize.InitConfig()
 	initialize.InitDB()
 
+	// flag 解析命令行参数
 	IP := flag.String("ip", "0.0.0.0", "IP地址")
-	Port := flag.Int("port", 50051, "端口号")
+	Port := flag.Int("port", 0, "端口号")
 	flag.Parse()
 
-	fmt.Println("IP: ", *IP)
-	fmt.Println("Port: ", *Port)
+	if *Port == 0 {
+		*Port, _ = utils.GetFreePort()
+	}
 
 	server := grpc.NewServer()
 	proto.RegisterUserServer(server, &handler.UserServer{})
@@ -51,8 +53,14 @@ func main() {
 	}
 	utils.Register(addr, port, name, tags, id)
 
+	fmt.Println("服务启动成功")
+	fmt.Println("Name: ", global.ServerConfig.Name)
+	fmt.Println("IP: ", *IP)
+	fmt.Println("Port: ", *Port)
+
 	err = server.Serve(lis)
 	if err != nil {
 		panic("Failed to start grpc: " + err.Error())
 	}
+
 }
