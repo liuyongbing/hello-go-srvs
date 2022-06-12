@@ -47,4 +47,14 @@ func Register(addr string, port int, name string, tags []string, id string) {
 	if err != nil {
 		panic(err)
 	}
+
+	// quit := make(chan os.Signal)
+	// signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	// <-quit
+
+	// err = client.Agent().ServiceDeregister(id)
+	// if err != nil {
+	// 	zap.S().Info("注销失败")
+	// }
+	// zap.S().Info("注销成功")
 }

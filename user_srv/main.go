@@ -9,6 +9,8 @@ import (
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
 
+	uuid "github.com/satori/go.uuid"
+
 	"github.com/liuyongbing/hello-go-srvs/user_srv/global"
 	"github.com/liuyongbing/hello-go-srvs/user_srv/handler"
 	"github.com/liuyongbing/hello-go-srvs/user_srv/initialize"
@@ -45,7 +47,9 @@ func main() {
 	addr := "192.168.31.141"
 	port := *Port
 	name := global.ServerConfig.Name
-	id := global.ServerConfig.Name
+	// id := global.ServerConfig.Name
+	// 负载均衡：通过终端开启多个服务
+	id := fmt.Sprintf("%s", uuid.NewV4())
 	tags := []string{
 		"user-srv",
 		"gosrv-register",
@@ -53,14 +57,16 @@ func main() {
 	}
 	utils.Register(addr, port, name, tags, id)
 
-	fmt.Println("服务启动成功")
-	fmt.Println("Name: ", global.ServerConfig.Name)
-	fmt.Println("IP: ", *IP)
-	fmt.Println("Port: ", *Port)
-
+	// go func() {
 	err = server.Serve(lis)
 	if err != nil {
 		panic("Failed to start grpc: " + err.Error())
 	}
+	// }()
+
+	fmt.Println("服务启动成功")
+	fmt.Println("Name: ", global.ServerConfig.Name)
+	fmt.Println("IP: ", *IP)
+	fmt.Println("Port: ", *Port)
 
 }
