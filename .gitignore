@@ -16,3 +16,6 @@
 
 # VSCode debug
 __debug_bin
+
+# tmp
+tmp/
