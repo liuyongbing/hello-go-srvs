@@ -10,6 +10,7 @@ type GoodsCategoryBrand struct {
 	Brands   Brands
 }
 
+// 重新定义表名
 func (GoodsCategoryBrand) TableName() string {
 	return "goodscategorybrand"
 }

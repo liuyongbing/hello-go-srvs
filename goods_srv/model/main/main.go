@@ -85,9 +85,23 @@ func main() {
 	}
 
 	// 初始化数据表
-	//err = db.AutoMigrate(&model.User{})
-	// 初始化用户数据
-	err = batchCreateUser(db)
+	err = db.AutoMigrate(&model.Banner{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.AutoMigrate(&model.Brands{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.AutoMigrate(&model.Category{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.AutoMigrate(&model.Goods{})
+	if err != nil {
+		panic(err)
+	}
+	err = db.AutoMigrate(&model.GoodsCategoryBrand{})
 	if err != nil {
 		panic(err)
 	}
