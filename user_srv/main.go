@@ -50,13 +50,15 @@ func main() {
 	name := global.ServerConfig.Name
 	// id := global.ServerConfig.Name
 	// 负载均衡：通过终端开启多个服务
-	id := fmt.Sprintf("%s", uuid.NewV4())
+	id := uuid.NewV4().String()
 	tags := []string{
 		"user-srv",
 		"gosrv-register",
 		"consul",
 	}
 	utils.Register(addr, port, name, tags, id)
+
+	fmt.Printf("服务启动中:[Name:%s][IP:%s][Port:%d]", global.ServerConfig.Name, *IP, *Port)
 
 	// go func() {
 	err = server.Serve(lis)
@@ -66,8 +68,5 @@ func main() {
 	// }()
 
 	fmt.Println("服务启动成功")
-	fmt.Println("Name: ", global.ServerConfig.Name)
-	fmt.Println("IP: ", *IP)
-	fmt.Println("Port: ", *Port)
 
 }

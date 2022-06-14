@@ -67,12 +67,6 @@ func LoadConfigFromNacos(cfg config.NacosConfig) {
 	}
 	zap.S().Infof("Nacos 原始配置内容：%s", configInfo)
 
-	// serverConfig := global.ServerConfig
-	// if err := json.Unmarshal([]byte(configInfo), &serverConfig); err != nil {
-	// 	panic(err)
-	// }
-	// zap.S().Infof("Nacos 绑定配置内容：%v", serverConfig)
-	// serverConfig := global.ServerConfig
 	if err := json.Unmarshal([]byte(configInfo), &global.ServerConfig); err != nil {
 		panic(err)
 	}
