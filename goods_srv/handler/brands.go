@@ -3,16 +3,14 @@ package handler
 import (
 	"context"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/global"
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/model"
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/proto"
 )
-
-// // Brand
-// BrandList(context.Context, *BrandFilterRequest) (*BrandListResponse, error)
-// CreateBrand(context.Context, *BrandRequest) (*BrandInfoResponse, error)
-// UpdateBrand(context.Context, *BrandRequest) (*emptypb.Empty, error)
-// DeleteBrand(context.Context, *BrandRequest) (*emptypb.Empty, error)
 
 /*
 BrandList
@@ -46,4 +44,63 @@ func (s *GoodsServer) BrandList(ctx context.Context, request *proto.BrandFilterR
 	response.Data = res
 
 	return &response, nil
+}
+
+/*
+CreateBrand
+*/
+func (s *GoodsServer) CreateBrand(ctx context.Context, request *proto.BrandRequest) (*proto.BrandInfoResponse, error) {
+	// 检查存在
+	result := global.DB.Where("name=?", request.Name).First(&model.Brands{})
+	if result.RowsAffected > 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "已存在")
+	}
+
+	// 新增记录
+	item := &model.Brands{
+		Name: request.Name,
+		Logo: request.Logo,
+	}
+	global.DB.Save(item)
+
+	return &proto.BrandInfoResponse{
+		Id: item.ID,
+	}, nil
+}
+
+/*
+UpdateBrand
+*/
+func (s *GoodsServer) UpdateBrand(ctx context.Context, request *proto.BrandRequest) (*emptypb.Empty, error) {
+	item := model.Brands{}
+	// 是否存在
+	result := global.DB.First(&item, request.Id)
+	if result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "不存在")
+	}
+
+	// 检测空值
+	if request.Name != "" {
+		item.Name = request.Name
+	}
+	if request.Logo != "" {
+		item.Logo = request.Logo
+	}
+
+	// 修改记录
+	global.DB.Save(&item)
+
+	return &emptypb.Empty{}, nil
+}
+
+/*
+DeleteBrand
+*/
+func (s *GoodsServer) DeleteBrand(ctx context.Context, request *proto.BrandRequest) (*emptypb.Empty, error) {
+	// 删除记录
+	if result := global.DB.Delete(&model.Brands{}, request.Id); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "不存在")
+	}
+
+	return &emptypb.Empty{}, nil
 }
