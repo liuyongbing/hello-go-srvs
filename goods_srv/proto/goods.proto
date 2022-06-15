@@ -2,7 +2,10 @@ syntax = "proto3";
 import "google/protobuf/empty.proto";
 option go_package = ".;proto";
 
-service Goods{
+service Goods {
+    // Demo
+    rpc SayHello(HelloRequest) returns (HelloReply) {}
+
     // Banner
     rpc BannerList(google.protobuf.Empty) returns(BannerListResponse);  // 获取轮播列表信息
     rpc CreateBanner(BannerRequest) returns(BannerResponse);            // 添加banner图
@@ -37,6 +40,19 @@ service Goods{
     rpc CreateCategoryBrand(CategoryBrandRequest) returns(CategoryBrandResponse);         // 添加
     rpc UpdateCategoryBrand(CategoryBrandRequest) returns(google.protobuf.Empty);         // 修改
     rpc DeleteCategoryBrand(CategoryBrandRequest) returns(google.protobuf.Empty);         // 删除
+}
+
+/*
++-------------------------------------------------------+
+|   Demo                                                |
++-------------------------------------------------------+
+*/
+message HelloRequest {
+  string name = 1;
+}
+
+message HelloReply {
+  string message = 1;
 }
 
 /*

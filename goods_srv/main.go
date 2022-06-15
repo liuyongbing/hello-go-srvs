@@ -34,7 +34,7 @@ func main() {
 	}
 
 	server := grpc.NewServer()
-	proto.RegisterUserServer(server, &handler.UserServer{})
+	proto.RegisterGoodsServer(server, &handler.GoodsServer{})
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *IP, *Port))
 	if err != nil {
 		panic("Failed to listen: " + err.Error())
@@ -45,14 +45,15 @@ func main() {
 
 	// 服务注册
 	// addr := "192.168.31.141"
-	addr := "10.8.19.134"
+	// addr := "10.8.19.134"
+	addr := "10.8.19.89"
 	port := *Port
 	name := global.ServerConfig.Name
 	// id := global.ServerConfig.Name
 	// 负载均衡：通过终端开启多个服务
 	id := uuid.NewV4().String()
 	tags := []string{
-		"user-srv",
+		"goods-srv",
 		"gosrv-register",
 		"consul",
 	}

@@ -23,6 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GoodsClient interface {
+	// Demo
+	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 	// Banner
 	BannerList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*BannerListResponse, error)
 	CreateBanner(ctx context.Context, in *BannerRequest, opts ...grpc.CallOption) (*BannerResponse, error)
@@ -61,6 +63,15 @@ type goodsClient struct {
 
 func NewGoodsClient(cc grpc.ClientConnInterface) GoodsClient {
 	return &goodsClient{cc}
+}
+
+func (c *goodsClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
+	out := new(HelloReply)
+	err := c.cc.Invoke(ctx, "/Goods/SayHello", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *goodsClient) BannerList(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*BannerListResponse, error) {
@@ -283,6 +294,8 @@ func (c *goodsClient) DeleteCategoryBrand(ctx context.Context, in *CategoryBrand
 // All implementations must embed UnimplementedGoodsServer
 // for forward compatibility
 type GoodsServer interface {
+	// Demo
+	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
 	// Banner
 	BannerList(context.Context, *emptypb.Empty) (*BannerListResponse, error)
 	CreateBanner(context.Context, *BannerRequest) (*BannerResponse, error)
@@ -320,6 +333,9 @@ type GoodsServer interface {
 type UnimplementedGoodsServer struct {
 }
 
+func (UnimplementedGoodsServer) SayHello(context.Context, *HelloRequest) (*HelloReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+}
 func (UnimplementedGoodsServer) BannerList(context.Context, *emptypb.Empty) (*BannerListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BannerList not implemented")
 }
@@ -403,6 +419,24 @@ type UnsafeGoodsServer interface {
 
 func RegisterGoodsServer(s grpc.ServiceRegistrar, srv GoodsServer) {
 	s.RegisterService(&Goods_ServiceDesc, srv)
+}
+
+func _Goods_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HelloRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GoodsServer).SayHello(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Goods/SayHello",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GoodsServer).SayHello(ctx, req.(*HelloRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Goods_BannerList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -844,6 +878,10 @@ var Goods_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "Goods",
 	HandlerType: (*GoodsServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "SayHello",
+			Handler:    _Goods_SayHello_Handler,
+		},
 		{
 			MethodName: "BannerList",
 			Handler:    _Goods_BannerList_Handler,
