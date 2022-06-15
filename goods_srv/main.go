@@ -26,7 +26,7 @@ func main() {
 
 	// flag 解析命令行参数
 	IP := flag.String("ip", "0.0.0.0", "IP地址")
-	Port := flag.Int("port", 0, "端口号")
+	Port := flag.Int("port", 50051, "端口号")
 	flag.Parse()
 
 	if *Port == 0 {
