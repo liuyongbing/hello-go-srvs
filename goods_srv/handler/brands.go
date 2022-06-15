@@ -19,7 +19,6 @@ BrandList
 */
 func (s *GoodsServer) BrandList(ctx context.Context, request *proto.BrandFilterRequest) (*proto.BrandListResponse, error) {
 	// 返回列表
-	// var response *proto.BrandListResponse
 	response := proto.BrandListResponse{}
 
 	// 查询结果
@@ -30,9 +29,9 @@ func (s *GoodsServer) BrandList(ctx context.Context, request *proto.BrandFilterR
 	}
 
 	// 记录总数
-	var total int64
-	global.DB.Model(&model.Brands{}).Count(&total)
-	response.Total = int32(total)
+	var count int64
+	global.DB.Model(&model.Brands{}).Count(&count)
+	response.Total = int32(count)
 
 	// 返回实例
 	var res []*proto.BrandInfoResponse
