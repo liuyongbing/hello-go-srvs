@@ -44,22 +44,16 @@ func main() {
 	grpc_health_v1.RegisterHealthServer(server, health.NewServer())
 
 	// 服务注册
-	// addr := "192.168.31.141"
-	// addr := "10.8.19.134"
-	addr := "10.8.19.89"
+	addr := global.ServerConfig.Host
 	port := *Port
 	name := global.ServerConfig.Name
 	// id := global.ServerConfig.Name
 	// 负载均衡：通过终端开启多个服务
 	id := uuid.NewV4().String()
-	tags := []string{
-		"goods-srv",
-		"gosrv-register",
-		"consul",
-	}
+	tags := global.ServerConfig.Tags
 	utils.Register(addr, port, name, tags, id)
 
-	fmt.Printf("服务启动中:[Name:%s][IP:%s][Port:%d]", global.ServerConfig.Name, *IP, *Port)
+	fmt.Printf("服务启动中:[Name:%s][IP:%s][Port:%d]", global.ServerConfig.Name, addr, *Port)
 
 	// go func() {
 	err = server.Serve(lis)

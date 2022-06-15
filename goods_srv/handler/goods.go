@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"time"
 
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/proto"
 )
@@ -13,7 +14,7 @@ type GoodsServer struct {
 
 func (s *GoodsServer) SayHello(ctx context.Context, request *proto.HelloRequest) (*proto.HelloReply, error) {
 	return &proto.HelloReply{
-		Message: "Hello, " + request.Name,
+		Message: "Time: " + time.Now().String() + "; Request context: " + request.Name,
 	}, nil
 }
 
