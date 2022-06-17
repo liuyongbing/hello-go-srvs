@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
 
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/proto"
 )
@@ -26,26 +24,20 @@ func Init() {
 	grpcClient = proto.NewGoodsClient(conn)
 }
 
-/*
-TestBannerList
-*/
-func TestBannerList() {
-	rsp, err := grpcClient.BannerList(context.Background(), &emptypb.Empty{})
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Total:", rsp.Total)
-	for _, v := range rsp.Data {
-		fmt.Println("ID:", v.Id)
-	}
-}
-
 func main() {
 	Init()
 
-	// 测试：获取用户列表
-	TestBannerList()
+	// Testing: Banner list
+	RunTestCase(TestBannerList, "BannerList")
+
+	// Testing: Brands list
+	RunTestCase(TestBrandList, "BrandList")
 
 	conn.Close()
+}
+
+func RunTestCase(TestCase func(), FuncName string) {
+	fmt.Printf("Testing of func %s \n", FuncName)
+	TestCase()
+	fmt.Println()
 }
