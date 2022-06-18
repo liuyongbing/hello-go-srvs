@@ -2,8 +2,14 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
+	"github.com/liuyongbing/hello-go-srvs/goods_srv/global"
+	"github.com/liuyongbing/hello-go-srvs/goods_srv/model"
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/proto"
 )
 
@@ -22,72 +28,112 @@ func (s *GoodsServer) SayHello(ctx context.Context, request *proto.HelloRequest)
 ModelToResponse
 返回数据结构绑定
 */
-// func ModelToResponse(user model.User) proto.UserInfoResponse {
-// 	userInfoRsp := proto.UserInfoResponse{
-// 		Id:       user.ID,
-// 		PassWord: user.Password,
-// 		NickName: user.Nickname,
-// 		Gender:   user.Gender,
-// 		Role:     int32(user.Role),
-// 		Mobile:   user.Mobile,
-// 	}
+func ModelToResponse(goods model.Goods) proto.GoodsInfoResponse {
+	modelRes := proto.GoodsInfoResponse{
+		Id:              goods.ID,
+		CategoryId:      goods.CategoryID,
+		Name:            goods.Name,
+		GoodsSn:         goods.GoodsSn,
+		ClickNum:        goods.ClickNum,
+		SoldNum:         goods.SoldNum,
+		FavNum:          goods.FavNum,
+		MarketPrice:     goods.MarketPrice,
+		ShopPrice:       goods.ShopPrice,
+		GoodsBrief:      goods.GoodsBrief,
+		ShipFree:        goods.ShipFree,
+		GoodsFrontImage: goods.GoodsFrontImage,
+		IsNew:           goods.IsNew,
+		IsHot:           goods.IsHot,
+		OnSale:          goods.OnSale,
+		DescImages:      goods.DescImages,
+		Images:          goods.Images,
+		Category: &proto.CategoryBriefInfoResponse{
+			Id:   goods.Category.ID,
+			Name: goods.Category.Name,
+		},
+		Brand: &proto.BrandInfoResponse{
+			Id:   goods.Brands.ID,
+			Name: goods.Brands.Name,
+			Logo: goods.Brands.Logo,
+		},
+	}
 
-// 	// 处理无默认值的情况
-// 	if user.Birthday != nil {
-// 		userInfoRsp.BirthDay = uint64(user.Birthday.Unix())
-// 	}
+	return modelRes
+}
 
-// 	return userInfoRsp
-// }
+// 	// 现在用户提交订单有多个商品，你得批量查询商品的信息吧
+// 	BatchGetGoods(context.Context, *BatchGoodsIdInfo) (*GoodsListResponse, error)
+// 	GetGoodsDetail(context.Context, *GoodInfoRequest) (*GoodsInfoResponse, error)
+// 	CreateGoods(context.Context, *CreateGoodsInfo) (*GoodsInfoResponse, error)
+// 	UpdateGoods(context.Context, *CreateGoodsInfo) (*emptypb.Empty, error)
+// 	DeleteGoods(context.Context, *DeleteGoodsInfo) (*emptypb.Empty, error)
 
-// /*
-// Paginate
-// 分页
-// */
-// func Paginate(page, pageSize int) func(db *gorm.DB) *gorm.DB {
-// 	return func(db *gorm.DB) *gorm.DB {
-// 		if page == 0 {
-// 			page = 1
-// 		}
+/*
+GetUserList
+*/
+func (s *GoodsServer) GoodsList(ctx context.Context, req *proto.GoodsFilterRequest) (*proto.GoodsListResponse, error) {
+	// 关键词搜索、查询新品、查询热门商品、通过价格区间筛选， 通过商品分类筛选
+	goodsListResponse := &proto.GoodsListResponse{}
 
-// 		switch {
-// 		case pageSize > 100:
-// 			pageSize = 100
-// 		case pageSize <= 0:
-// 			pageSize = 10
-// 		}
+	var goods []model.Goods
+	localDB := global.DB.Model(model.Goods{})
+	if req.KeyWords != "" {
+		//搜索
+		localDB = localDB.Where("name LIKE ?", "%"+req.KeyWords+"%")
+	}
+	if req.IsHot {
+		localDB = localDB.Where(model.Goods{IsHot: true})
+	}
+	if req.IsNew {
+		localDB = localDB.Where(model.Goods{IsNew: true})
+	}
 
-// 		offset := (page - 1) * pageSize
-// 		return db.Offset(offset).Limit(pageSize)
-// 	}
-// }
+	if req.PriceMin > 0 {
+		localDB = localDB.Where("shop_price>=?", req.PriceMin)
+	}
+	if req.PriceMax > 0 {
+		localDB = localDB.Where("shop_price<=?", req.PriceMax)
+	}
 
-// /*
-// GetUserList
-// 获取用户列表
-// */
-// func (s *UserServer) GetUserList(ctx context.Context, req *proto.PageInfo) (*proto.UserListResponse, error) {
-// 	var users []model.User
-// 	result := global.DB.Find(&users)
-// 	if result.Error != nil {
-// 		return nil, result.Error
-// 	}
+	if req.Brand > 0 {
+		localDB = localDB.Where("brands_id=?", req.Brand)
+	}
 
-// 	// 返回的数据体
-// 	rsp := &proto.UserListResponse{}
-// 	rsp.Total = int32(result.RowsAffected)
+	//通过category去查询商品
+	var subQuery string
+	if req.TopCategory > 0 {
+		var category model.Category
+		if result := global.DB.First(&category, req.TopCategory); result.RowsAffected == 0 {
+			return nil, status.Errorf(codes.NotFound, "商品分类不存在")
+		}
 
-// 	// 分页
-// 	global.DB.Scopes(Paginate(int(req.Pn), int(req.PSize))).Find(&users)
+		if category.Level == 1 {
+			subQuery = fmt.Sprintf("select id from category where parent_category_id in (select id from category WHERE parent_category_id=%d)", req.TopCategory)
+		} else if category.Level == 2 {
+			subQuery = fmt.Sprintf("select id from category WHERE parent_category_id=%d", req.TopCategory)
+		} else if category.Level == 3 {
+			subQuery = fmt.Sprintf("select id from category WHERE id=%d", req.TopCategory)
+		}
 
-// 	// 返回数据结构绑定
-// 	for _, user := range users {
-// 		userInfoRsp := ModelToResponse(user)
-// 		rsp.Data = append(rsp.Data, &userInfoRsp)
-// 	}
+		localDB = localDB.Where(fmt.Sprintf("category_id in (%s)", subQuery))
+	}
 
-// 	return rsp, nil
-// }
+	var count int64
+	localDB.Count(&count)
+	goodsListResponse.Total = int32(count)
+
+	result := localDB.Preload("Category").Preload("Brands").Scopes(Paginate(int(req.Pages), int(req.PagePerNums))).Find(&goods)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	for _, good := range goods {
+		goodsInfoResponse := ModelToResponse(good)
+		goodsListResponse.Data = append(goodsListResponse.Data, &goodsInfoResponse)
+	}
+
+	return goodsListResponse, nil
+}
 
 // /*
 // GetUserByMobile
