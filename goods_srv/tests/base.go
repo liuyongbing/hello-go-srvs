@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/proto"
 )
@@ -15,7 +16,8 @@ var (
 
 func Init() {
 	var err error
-	conn, err = grpc.Dial("127.0.0.1:50051", grpc.WithInsecure())
+	conn, err = grpc.Dial("127.0.0.1:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+
 	if err != nil {
 		panic(err)
 	}
