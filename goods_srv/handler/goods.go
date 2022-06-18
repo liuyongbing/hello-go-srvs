@@ -7,6 +7,7 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/global"
 	"github.com/liuyongbing/hello-go-srvs/goods_srv/model"
@@ -60,13 +61,6 @@ func ModelToResponse(goods model.Goods) proto.GoodsInfoResponse {
 
 	return modelRes
 }
-
-// 	// 现在用户提交订单有多个商品，你得批量查询商品的信息吧
-// 	BatchGetGoods(context.Context, *BatchGoodsIdInfo) (*GoodsListResponse, error)
-// 	GetGoodsDetail(context.Context, *GoodInfoRequest) (*GoodsInfoResponse, error)
-// 	CreateGoods(context.Context, *CreateGoodsInfo) (*GoodsInfoResponse, error)
-// 	UpdateGoods(context.Context, *CreateGoodsInfo) (*emptypb.Empty, error)
-// 	DeleteGoods(context.Context, *DeleteGoodsInfo) (*emptypb.Empty, error)
 
 /*
 GetUserList
@@ -135,106 +129,116 @@ func (s *GoodsServer) GoodsList(ctx context.Context, req *proto.GoodsFilterReque
 	return goodsListResponse, nil
 }
 
-// /*
-// GetUserByMobile
-// 通过 Mobile 查询用户
-// */
-// func (s *UserServer) GetUserByMobile(ctx context.Context, req *proto.MobileRequest) (*proto.UserInfoResponse, error) {
-// 	var user model.User
-// 	result := global.DB.Where(&model.User{Mobile: req.Mobile}).First(&user)
-// 	if result.RowsAffected == 0 {
-// 		return nil, status.Errorf(codes.NotFound, "用户不存在")
-// 	}
-// 	if result.Error != nil {
-// 		return nil, result.Error
-// 	}
+// BatchGetGoods
+func (s *GoodsServer) BatchGetGoods(ctx context.Context, req *proto.BatchGoodsIdInfo) (*proto.GoodsListResponse, error) {
+	goodsListResponse := &proto.GoodsListResponse{}
 
-// 	userInfoRsp := ModelToResponse(user)
+	var goods []model.Goods
 
-// 	return &userInfoRsp, nil
-// }
+	//调用where并不会真正执行sql 只是用来生成sql的 当调用find， first才会去执行sql，
+	result := global.DB.Where(req.Id).Find(&goods)
+	for _, good := range goods {
+		goodsInfoResponse := ModelToResponse(good)
+		goodsListResponse.Data = append(goodsListResponse.Data, &goodsInfoResponse)
+	}
+	goodsListResponse.Total = int32(result.RowsAffected)
+	return goodsListResponse, nil
+}
 
-// /*
-// GetUserById
-// 通过 Id 查询用户
-// */
-// func (s *UserServer) GetUserById(ctx context.Context, req *proto.IdRequest) (*proto.UserInfoResponse, error) {
-// 	var user model.User
-// 	result := global.DB.First(&user, req.Id)
-// 	if result.RowsAffected == 0 {
-// 		return nil, status.Errorf(codes.NotFound, "用户不存在")
-// 	}
-// 	if result.Error != nil {
-// 		return nil, result.Error
-// 	}
+// GetGoodsDetail
+func (s *GoodsServer) GetGoodsDetail(ctx context.Context, req *proto.GoodInfoRequest) (*proto.GoodsInfoResponse, error) {
+	var goods model.Goods
 
-// 	userInfoRsp := ModelToResponse(user)
+	if result := global.DB.First(&goods, req.Id); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "商品不存在")
+	}
 
-// 	return &userInfoRsp, nil
-// }
+	goodsInfoResponse := ModelToResponse(goods)
 
-// /*
-// CreateUser
-// 创建用户
-// */
-// func (s *UserServer) CreateUser(ctx context.Context, req *proto.CreateUserInfo) (*proto.UserInfoResponse, error) {
-// 	var user model.User
-// 	result := global.DB.Where(&model.User{Mobile: req.Mobile}).First(&user)
-// 	if result.RowsAffected == 1 {
-// 		return nil, status.Errorf(codes.AlreadyExists, "用户已存在")
-// 	}
+	return &goodsInfoResponse, nil
+}
 
-// 	user.Mobile = req.Mobile
-// 	user.Nickname = req.NickName
+// CreateGoods
+func (s *GoodsServer) CreateGoods(ctx context.Context, req *proto.CreateGoodsInfo) (*proto.GoodsInfoResponse, error) {
+	var category model.Category
+	if result := global.DB.First(&category, req.CategoryId); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "商品分类不存在")
+	}
 
-// 	//密码加密
-// 	options := &password.Options{SaltLen: 16, Iterations: 100, KeyLen: 32, HashFunction: sha512.New}
-// 	salt, encodedPwd := password.Encode(req.PassWord, options)
-// 	user.Password = fmt.Sprintf("$pbkdf2-sha512$%s$%s", salt, encodedPwd)
+	var brand model.Brands
+	if result := global.DB.First(&brand, req.BrandId); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "品牌不存在")
+	}
+	//这里没有看到图片文件是如何上传， 在微服务中 普通的文件上传已经不再使用
+	goods := model.Goods{
+		Brands:          brand,
+		BrandsID:        brand.ID,
+		Category:        category,
+		CategoryID:      category.ID,
+		Name:            req.Name,
+		GoodsSn:         req.GoodsSn,
+		MarketPrice:     req.MarketPrice,
+		ShopPrice:       req.ShopPrice,
+		GoodsBrief:      req.GoodsBrief,
+		ShipFree:        req.ShipFree,
+		Images:          req.Images,
+		DescImages:      req.DescImages,
+		GoodsFrontImage: req.GoodsFrontImage,
+		IsNew:           req.IsNew,
+		IsHot:           req.IsHot,
+		OnSale:          req.OnSale,
+	}
 
-// 	result = global.DB.Create(&user)
-// 	if result.Error != nil {
-// 		return nil, status.Errorf(codes.Internal, result.Error.Error())
-// 	}
+	global.DB.Save(&goods)
+	return &proto.GoodsInfoResponse{
+		Id: goods.ID,
+	}, nil
+}
 
-// 	userInfoRsp := ModelToResponse(user)
+// UpdateGoods
+func (s *GoodsServer) UpdateGoods(ctx context.Context, req *proto.CreateGoodsInfo) (*emptypb.Empty, error) {
+	var goods model.Goods
 
-// 	return &userInfoRsp, nil
-// }
+	if result := global.DB.First(&goods, req.Id); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "商品不存在")
+	}
 
-// /*
-// UpdateUser
-// 修改用户信息
-// */
-// func (s *UserServer) UpdateUser(ctx context.Context, req *proto.UpdateUserInfo) (*empty.Empty, error) {
-// 	var user model.User
-// 	result := global.DB.First(user, req.Id)
-// 	if result.RowsAffected == 0 {
-// 		return nil, status.Errorf(codes.NotFound, "用户不存在")
-// 	}
+	var category model.Category
+	if result := global.DB.First(&category, req.CategoryId); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "商品分类不存在")
+	}
 
-// 	birthDay := time.Unix(int64(req.BirthDay), 0)
-// 	user.Nickname = req.NickName
-// 	user.Birthday = &birthDay
-// 	user.Gender = req.Gender
+	var brand model.Brands
+	if result := global.DB.First(&brand, req.BrandId); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "品牌不存在")
+	}
 
-// 	result = global.DB.Save(user)
-// 	if result.Error != nil {
-// 		return nil, status.Errorf(codes.Internal, result.Error.Error())
-// 	}
+	goods.Brands = brand
+	goods.BrandsID = brand.ID
+	goods.Category = category
+	goods.CategoryID = category.ID
+	goods.Name = req.Name
+	goods.GoodsSn = req.GoodsSn
+	goods.MarketPrice = req.MarketPrice
+	goods.ShopPrice = req.ShopPrice
+	goods.GoodsBrief = req.GoodsBrief
+	goods.ShipFree = req.ShipFree
+	goods.Images = req.Images
+	goods.DescImages = req.DescImages
+	goods.GoodsFrontImage = req.GoodsFrontImage
+	goods.IsNew = req.IsNew
+	goods.IsHot = req.IsHot
+	goods.OnSale = req.OnSale
 
-// 	return &empty.Empty{}, nil
-// }
+	global.DB.Save(&goods)
 
-// /*
-// CheckPassword
-// 检查用户密码
-// */
-// func (s *UserServer) CheckPassword(ctx context.Context, req *proto.PasswordCheckInfo) (*proto.CheckResponse, error) {
-// 	//密码校验
-// 	options := &password.Options{SaltLen: 16, Iterations: 100, KeyLen: 32, HashFunction: sha512.New}
-// 	passwordInfo := strings.Split(req.EncryptedPassword, "$")
-// 	check := password.Verify(req.PassWord, passwordInfo[2], passwordInfo[3], options)
+	return &emptypb.Empty{}, nil
+}
 
-// 	return &proto.CheckResponse{Success: check}, nil
-// }
+// DeleteGoods
+func (s *GoodsServer) DeleteGoods(ctx context.Context, req *proto.DeleteGoodsInfo) (*emptypb.Empty, error) {
+	if result := global.DB.Delete(&model.Goods{}, req.Id); result.RowsAffected == 0 {
+		return nil, status.Errorf(codes.NotFound, "商品不存在")
+	}
+	return &emptypb.Empty{}, nil
+}
