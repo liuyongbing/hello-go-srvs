@@ -149,7 +149,7 @@ func (s *GoodsServer) BatchGetGoods(ctx context.Context, req *proto.BatchGoodsId
 func (s *GoodsServer) GetGoodsDetail(ctx context.Context, req *proto.GoodInfoRequest) (*proto.GoodsInfoResponse, error) {
 	var goods model.Goods
 
-	if result := global.DB.First(&goods, req.Id); result.RowsAffected == 0 {
+	if result := global.DB.Preload("Category").Preload("Brands").First(&goods, req.Id); result.RowsAffected == 0 {
 		return nil, status.Errorf(codes.NotFound, "商品不存在")
 	}
 
