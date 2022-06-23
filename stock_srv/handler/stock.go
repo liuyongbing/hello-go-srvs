@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"time"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -12,9 +13,12 @@ type StockServer struct {
 	proto.UnimplementedStockServer
 }
 
-// SayHello(context.Context, *HelloRequest) (*HelloReply, error)
+func (s *StockServer) SayHello(ctx context.Context, request *proto.HelloRequest) (*proto.HelloReply, error) {
+	return &proto.HelloReply{
+		Message: "Time:" + time.Now().GoString() + "; Request context: " + request.Name,
+	}, nil
+}
 
-// Reback(context.Context, *SellInfo) (*emptypb.Empty, error)
 /*
 SetInv
 */
