@@ -1,0 +1,8 @@
+nacos:
+  host: "127.0.0.1"
+  port: 8848
+  user: "nacos"
+  password: "nacos"
+  namespace_id: "48f8b780-312c-4b37-8055-05f453fc6c4f"
+  data_id: "stock-srv"
+  group: "dev"
