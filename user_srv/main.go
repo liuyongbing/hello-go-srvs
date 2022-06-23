@@ -4,6 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -65,15 +68,26 @@ func main() {
 		zap.S().Panic("服务注册失败：", err.Error())
 	}
 
-	fmt.Printf("服务启动中:[Name:%s][IP:%s][Port:%d]", global.ServerConfig.Name, *IP, *Port)
+	fmt.Printf("服务启动中:[Name:%s][IP:%s][Port:%d]\n", global.ServerConfig.Name, *IP, *Port)
 
-	// go func() {
-	err = server.Serve(lis)
-	if err != nil {
-		panic("Failed to start grpc: " + err.Error())
-	}
-	// }()
+	go func() {
+		err = server.Serve(lis)
+		if err != nil {
+			panic("Failed to start grpc: " + err.Error())
+		}
+	}()
 
 	fmt.Println("服务启动成功")
 
+	// 优雅退出
+	quit := make(chan os.Signal)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	// 服务注销
+	if err := regClient.DeRegister(id); err != nil {
+		zap.S().Info("服务注销失败", err.Error())
+	} else {
+		zap.S().Info("服务注销成功")
+	}
 }
