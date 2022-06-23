@@ -44,8 +44,10 @@ func main() {
 	grpc_health_v1.RegisterHealthServer(server, health.NewServer())
 
 	// 服务注册
+	addr := ""
 	// addr := "192.168.31.141"
-	addr := "10.8.19.134"
+	// addr := "10.8.26.39"
+	addr = global.ServerConfig.Host
 	port := *Port
 	name := global.ServerConfig.Name
 	// id := global.ServerConfig.Name
