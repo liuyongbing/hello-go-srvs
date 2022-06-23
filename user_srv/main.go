@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -16,6 +17,7 @@ import (
 	"github.com/liuyongbing/hello-go-srvs/user_srv/initialize"
 	"github.com/liuyongbing/hello-go-srvs/user_srv/proto"
 	"github.com/liuyongbing/hello-go-srvs/user_srv/utils"
+	"github.com/liuyongbing/hello-go-srvs/user_srv/utils/register/consul"
 )
 
 func main() {
@@ -53,12 +55,15 @@ func main() {
 	// id := global.ServerConfig.Name
 	// 负载均衡：通过终端开启多个服务
 	id := uuid.NewV4().String()
-	tags := []string{
-		"user-srv",
-		"gosrv-register",
-		"consul",
+	tags := global.ServerConfig.Tags
+	// utils.Register(addr, port, name, tags, id)
+
+	consulCfg := global.ServerConfig.ConsulInfo
+	regClient := consul.NewRegistryClient(consulCfg.Host, consulCfg.Port)
+	err = regClient.Register(addr, port, name, tags, id)
+	if err != nil {
+		zap.S().Panic("服务注册失败：", err.Error())
 	}
-	utils.Register(addr, port, name, tags, id)
 
 	fmt.Printf("服务启动中:[Name:%s][IP:%s][Port:%d]", global.ServerConfig.Name, *IP, *Port)
 
