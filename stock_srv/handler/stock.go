@@ -21,11 +21,11 @@ import (
 	"github.com/liuyongbing/hello-go-srvs/stock_srv/proto"
 )
 
-type InventoryServer struct {
+type StockServer struct {
 	proto.UnimplementedStockServer
 }
 
-func (*InventoryServer) SetInv(ctx context.Context, req *proto.GoodsInvInfo) (*emptypb.Empty, error) {
+func (*StockServer) SetInv(ctx context.Context, req *proto.GoodsInvInfo) (*emptypb.Empty, error) {
 	//设置库存， 如果我要更新库存
 	var inv model.Inventory
 	global.DB.Where(&model.Inventory{Goods: req.GoodsId}).First(&inv)
@@ -36,7 +36,7 @@ func (*InventoryServer) SetInv(ctx context.Context, req *proto.GoodsInvInfo) (*e
 	return &emptypb.Empty{}, nil
 }
 
-func (*InventoryServer) InvDetail(ctx context.Context, req *proto.GoodsInvInfo) (*proto.GoodsInvInfo, error) {
+func (*StockServer) InvDetail(ctx context.Context, req *proto.GoodsInvInfo) (*proto.GoodsInvInfo, error) {
 	var inv model.Inventory
 	if result := global.DB.Where(&model.Inventory{Goods: req.GoodsId}).First(&inv); result.RowsAffected == 0 {
 		return nil, status.Errorf(codes.NotFound, "没有库存信息")
@@ -47,12 +47,12 @@ func (*InventoryServer) InvDetail(ctx context.Context, req *proto.GoodsInvInfo) 
 	}, nil
 }
 
-func (*InventoryServer) Sell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
+func (*StockServer) Sell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
 	//扣减库存， 本地事务 [1:10,  2:5, 3: 20]
 	//数据库基本的一个应用场景：数据库事务
 	//并发情况之下 可能会出现超卖 1
 	client := goredislib.NewClient(&goredislib.Options{
-		Addr: "192.168.0.104:6379",
+		Addr: "127.0.0.1:6379",
 	})
 	pool := goredis.NewPool(client) // or, pool := redigo.NewPool(...)
 	rs := redsync.New(pool)
@@ -123,7 +123,7 @@ func (*InventoryServer) Sell(ctx context.Context, req *proto.SellInfo) (*emptypb
 	return &emptypb.Empty{}, nil
 }
 
-func (*InventoryServer) Reback(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
+func (*StockServer) Reback(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
 	//库存归还： 1：订单超时归还 2. 订单创建失败，归还之前扣减的库存 3. 手动归还
 	tx := global.DB.Begin()
 	for _, goodInfo := range req.GoodsInfo {
@@ -141,12 +141,12 @@ func (*InventoryServer) Reback(ctx context.Context, req *proto.SellInfo) (*empty
 	return &emptypb.Empty{}, nil
 }
 
-func (*InventoryServer) TrySell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
+func (*StockServer) TrySell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
 	//扣减库存， 本地事务 [1:10,  2:5, 3: 20]
 	//数据库基本的一个应用场景：数据库事务
 	//并发情况之下 可能会出现超卖 1
 	client := goredislib.NewClient(&goredislib.Options{
-		Addr: "192.168.0.104:6379",
+		Addr: "127.0.0.1:6379",
 	})
 	pool := goredis.NewPool(client) // or, pool := redigo.NewPool(...)
 	rs := redsync.New(pool)
@@ -199,12 +199,12 @@ func (*InventoryServer) TrySell(ctx context.Context, req *proto.SellInfo) (*empt
 	return &emptypb.Empty{}, nil
 }
 
-func (*InventoryServer) ConfirmSell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
+func (*StockServer) ConfirmSell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
 	//扣减库存， 本地事务 [1:10,  2:5, 3: 20]
 	//数据库基本的一个应用场景：数据库事务
 	//并发情况之下 可能会出现超卖 1
 	client := goredislib.NewClient(&goredislib.Options{
-		Addr: "192.168.0.104:6379",
+		Addr: "127.0.0.1:6379",
 	})
 	pool := goredis.NewPool(client) // or, pool := redigo.NewPool(...)
 	rs := redsync.New(pool)
@@ -257,12 +257,12 @@ func (*InventoryServer) ConfirmSell(ctx context.Context, req *proto.SellInfo) (*
 	return &emptypb.Empty{}, nil
 }
 
-func (*InventoryServer) CancelSell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
+func (*StockServer) CancelSell(ctx context.Context, req *proto.SellInfo) (*emptypb.Empty, error) {
 	//扣减库存， 本地事务 [1:10,  2:5, 3: 20]
 	//数据库基本的一个应用场景：数据库事务
 	//并发情况之下 可能会出现超卖 1
 	client := goredislib.NewClient(&goredislib.Options{
-		Addr: "192.168.0.104:6379",
+		Addr: "127.0.0.1:6379",
 	})
 	pool := goredis.NewPool(client) // or, pool := redigo.NewPool(...)
 	rs := redsync.New(pool)
