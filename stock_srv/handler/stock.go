@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/apache/rocketmq-client-go/v2/consumer"
 	"github.com/apache/rocketmq-client-go/v2/primitive"
@@ -23,6 +24,12 @@ import (
 
 type StockServer struct {
 	proto.UnimplementedStockServer
+}
+
+func (*StockServer) HelloStock(ctx context.Context, req *proto.HelloStockRequest) (*proto.HelloStockReply, error) {
+	return &proto.HelloStockReply{
+		Message: "Request content：" + req.Name + "\nTime: " + time.Now().GoString(),
+	}, nil
 }
 
 func (*StockServer) SetInv(ctx context.Context, req *proto.GoodsInvInfo) (*emptypb.Empty, error) {

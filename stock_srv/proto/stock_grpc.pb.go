@@ -24,7 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type StockClient interface {
 	// Demo
-	SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
+	HelloStock(ctx context.Context, in *HelloStockRequest, opts ...grpc.CallOption) (*HelloStockReply, error)
 	SetInv(ctx context.Context, in *GoodsInvInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	InvDetail(ctx context.Context, in *GoodsInvInfo, opts ...grpc.CallOption) (*GoodsInvInfo, error)
 	Sell(ctx context.Context, in *SellInfo, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -39,9 +39,9 @@ func NewStockClient(cc grpc.ClientConnInterface) StockClient {
 	return &stockClient{cc}
 }
 
-func (c *stockClient) SayHello(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error) {
-	out := new(HelloReply)
-	err := c.cc.Invoke(ctx, "/Stock/SayHello", in, out, opts...)
+func (c *stockClient) HelloStock(ctx context.Context, in *HelloStockRequest, opts ...grpc.CallOption) (*HelloStockReply, error) {
+	out := new(HelloStockReply)
+	err := c.cc.Invoke(ctx, "/Stock/HelloStock", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (c *stockClient) Reback(ctx context.Context, in *SellInfo, opts ...grpc.Cal
 // for forward compatibility
 type StockServer interface {
 	// Demo
-	SayHello(context.Context, *HelloRequest) (*HelloReply, error)
+	HelloStock(context.Context, *HelloStockRequest) (*HelloStockReply, error)
 	SetInv(context.Context, *GoodsInvInfo) (*emptypb.Empty, error)
 	InvDetail(context.Context, *GoodsInvInfo) (*GoodsInvInfo, error)
 	Sell(context.Context, *SellInfo) (*emptypb.Empty, error)
@@ -101,8 +101,8 @@ type StockServer interface {
 type UnimplementedStockServer struct {
 }
 
-func (UnimplementedStockServer) SayHello(context.Context, *HelloRequest) (*HelloReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method SayHello not implemented")
+func (UnimplementedStockServer) HelloStock(context.Context, *HelloStockRequest) (*HelloStockReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method HelloStock not implemented")
 }
 func (UnimplementedStockServer) SetInv(context.Context, *GoodsInvInfo) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetInv not implemented")
@@ -129,20 +129,20 @@ func RegisterStockServer(s grpc.ServiceRegistrar, srv StockServer) {
 	s.RegisterService(&Stock_ServiceDesc, srv)
 }
 
-func _Stock_SayHello_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(HelloRequest)
+func _Stock_HelloStock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HelloStockRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(StockServer).SayHello(ctx, in)
+		return srv.(StockServer).HelloStock(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Stock/SayHello",
+		FullMethod: "/Stock/HelloStock",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(StockServer).SayHello(ctx, req.(*HelloRequest))
+		return srv.(StockServer).HelloStock(ctx, req.(*HelloStockRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -227,8 +227,8 @@ var Stock_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*StockServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "SayHello",
-			Handler:    _Stock_SayHello_Handler,
+			MethodName: "HelloStock",
+			Handler:    _Stock_HelloStock_Handler,
 		},
 		{
 			MethodName: "SetInv",

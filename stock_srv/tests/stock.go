@@ -1,25 +1,32 @@
-package stock
+package main
 
-// func TestSetInv(goodsId, Num int32) {
-// 	_, err := tests.grpcClient.SetInv(context.Background(), &proto.GoodsInvInfo{
-// 		GoodsId: goodsId,
-// 		Num:     Num,
-// 	})
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	fmt.Println("设置库存成功")
-// }
+import (
+	"context"
+	"fmt"
 
-// func TestInvDetail(goodsId int32) {
-// 	rsp, err := grpcClient.InvDetail(context.Background(), &proto.GoodsInvInfo{
-// 		GoodsId: goodsId,
-// 	})
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	fmt.Println(rsp.Num)
-// }
+	"github.com/liuyongbing/hello-go-srvs/stock_srv/proto"
+)
+
+func TestSetInv(goodsId, Num int32) {
+	_, err := grpcClient.SetInv(context.Background(), &proto.GoodsInvInfo{
+		GoodsId: goodsId,
+		Num:     Num,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("设置库存成功")
+}
+
+func TestInvDetail(goodsId int32) {
+	rsp, err := grpcClient.InvDetail(context.Background(), &proto.GoodsInvInfo{
+		GoodsId: goodsId,
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(rsp.Num)
+}
 
 // func TestSell(wg *sync.WaitGroup) {
 // 	/*

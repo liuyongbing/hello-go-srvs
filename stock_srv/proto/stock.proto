@@ -4,7 +4,7 @@ option go_package = ".;proto";
 
 service Stock {
     // Demo
-    rpc SayHello(HelloRequest) returns (HelloReply) {}
+    rpc HelloStock(HelloStockRequest) returns (HelloStockReply) {}
 
     rpc SetInv(GoodsInvInfo) returns(google.protobuf.Empty);    // 设置库存
     rpc InvDetail(GoodsInvInfo) returns (GoodsInvInfo);         // 获取库存信息
@@ -27,10 +27,10 @@ message SellInfo {
 |   Demo                                                |
 +-------------------------------------------------------+
 */
-message HelloRequest {
+message HelloStockRequest {
   string name = 1;
 }
 
-message HelloReply {
+message HelloStockReply {
   string message = 1;
 }
