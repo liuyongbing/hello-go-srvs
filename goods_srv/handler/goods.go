@@ -30,7 +30,7 @@ ModelToResponse
 返回数据结构绑定
 */
 func ModelToResponse(goods model.Goods) proto.GoodsInfoResponse {
-	modelRes := proto.GoodsInfoResponse{
+	return proto.GoodsInfoResponse{
 		Id:              goods.ID,
 		CategoryId:      goods.CategoryID,
 		Name:            goods.Name,
@@ -58,8 +58,6 @@ func ModelToResponse(goods model.Goods) proto.GoodsInfoResponse {
 			Logo: goods.Brands.Logo,
 		},
 	}
-
-	return modelRes
 }
 
 /*
