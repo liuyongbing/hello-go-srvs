@@ -6,17 +6,13 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"google.golang.org/protobuf/types/known/emptypb"
 
-	goodsProto "github.com/liuyongbing/hello-go-srvs/goods_srv/proto"
 	"github.com/liuyongbing/hello-go-srvs/stock_srv/proto"
 )
 
 var (
 	conn       *grpc.ClientConn
 	grpcClient proto.StockClient
-
-	goodsGrpcClient goodsProto.GoodsClient
 )
 
 func Init() {
@@ -31,36 +27,21 @@ func Init() {
 	grpcClient = proto.NewStockClient(conn)
 }
 
-func InitGoodsGrpcClient() {
-	var err error
-	goodsGrpcConn, err := grpc.Dial("127.0.0.1:50052", grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-	if err != nil {
-		panic(err)
-	}
-	// defer goodsGrpcConn.Close()
-
-	goodsGrpcClient = goodsProto.NewGoodsClient(goodsGrpcConn)
-}
-
 func main() {
 	Init()
-
-	InitGoodsGrpcClient()
 
 	// Testing: Hello Stock
 	RunTestCase(TestHelloStock, "TestHelloStock")
 
-	// Testing: Banner list
-	RunTestCase(TestBannerList, "BannerList")
-
-	goodsId := 421
-	// goodsNum := 20
+	var goodsId, goodsNum int32
+	goodsId = 421
+	goodsNum = 100
 
 	// Testing: SetInv
-	// TestSetInv(GoodsId, GoodsNum)
+	TestSetInv(goodsId, goodsNum)
 
-	TestInvDetail(int32(goodsId))
+	// Testing: InvDetail
+	TestInvDetail(goodsId)
 
 	conn.Close()
 }
@@ -80,19 +61,4 @@ func TestHelloStock() {
 	}
 
 	fmt.Println(rsp.Message)
-}
-
-/*
-TestBannerList
-*/
-func TestBannerList() {
-	rsp, err := goodsGrpcClient.BannerList(context.Background(), &emptypb.Empty{})
-	if err != nil {
-		panic(err)
-	}
-
-	fmt.Println("Total:", rsp.Total)
-	for _, v := range rsp.Data {
-		fmt.Println("ID:", v.Id)
-	}
 }

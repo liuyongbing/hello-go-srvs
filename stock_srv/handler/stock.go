@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 
-	"github.com/liuyongbing/hello-go-srvs/goods_srv/global"
+	"github.com/liuyongbing/hello-go-srvs/stock_srv/global"
 	"github.com/liuyongbing/hello-go-srvs/stock_srv/model"
 	"github.com/liuyongbing/hello-go-srvs/stock_srv/proto"
 )
